@@ -1,0 +1,95 @@
+backend: 'DB Schema Review: No Schema Changes. The multi-step flow, progress indicator,
+  and back/forward navigation can be implemented entirely on the client by grouping
+  questions from existing survey payloads. We will derive logical steps from existing
+  question metadata (e.g., section/group/page identifiers if present) or fall back
+  to a single-step survey if none exist.
+
+
+  Data Migration Changes: None.
+
+
+  Data Layer: No repository changes required under backend/src/repositories. Survey
+  fetching and response submission remain unchanged.
+
+
+  Business Logic: No changes required under backend/src/services. All logic for step
+  progression and answer preservation will be handled in the frontend state and hooks.
+  Export list under backend/src/services/index.ts remains unchanged.
+
+
+  Types: No changes in /backend/src/types. Existing survey/question/answer types remain
+  valid; the frontend will introduce derived types for steps without altering backend
+  contracts.
+
+
+  Open API Spec: No changes to backend/src OpenAPI files. We continue to use existing
+  endpoints to: (1) fetch a survey definition with ordered questions and any available
+  grouping metadata, and (2) submit completed responses. Partial saves are not introduced
+  by this feature.
+
+
+  API Handlers: No changes in backend API handlers. The handler contracts remain stable;
+  no new routes required.
+
+  '
+frontend: "APIs: No changes to the API client implementations in frontend/src/. Continue\
+  \ calling existing survey fetch and response submission endpoints. Ensure the survey\
+  \ payload includes question metadata used for grouping (e.g., sectionId/groupId/page).\
+  \ The client will tolerate the absence of these fields by operating as a single-step\
+  \ flow.\n\nTypes:\n- Add in frontend/src/types/stepper.ts:\n  - type Step = { id:\
+  \ string; title: string; index: number; questionIds: string[] }.\n  - type GroupedSurvey\
+  \ = { steps: Step[]; questionsById: Record<string, Question>; } where Question is\
+  \ the existing API type; no API type changes required.\n- If a Question type does\
+  \ not already include optional grouping metadata, extend only the client-side derived\
+  \ type via intersection when grouping (do not mutate generated/API types): type\
+  \ QuestionWithGrouping = Question & { sectionId?: string; groupId?: string; page?:\
+  \ number }.\n\nStore:\n- Create frontend/src/store/stepperSlice.ts (or add to existing\
+  \ store setup) with state:\n  - surveyId: string | null\n  - steps: Step[]\n  -\
+  \ currentStepIndex: number\n  - answers: Record<string, unknown> (keyed by questionId;\
+  \ value uses existing AnswerValue type)\n  - visitedStepIndexes: number[] (or Set,\
+  \ but store as array for serialization)\n  - isSubmitting: boolean\n  - validationErrors:\
+  \ Record<string, string | null>\n- Actions:\n  - initializeFromSurvey(survey: Survey):\
+  \ derives steps and resets state deterministically.\n  - setAnswer(questionId, value)\n\
+  \  - goNext(): validates current step (if existing validators in hooks/utilities),\
+  \ advances index if valid, records visited.\n  - goPrev(): decrements index >= 0.\n\
+  \  - jumpToStep(index): bounds-checked navigation.\n  - setValidationErrors(payload)\n\
+  \  - resetStepper()\n- Selectors:\n  - selectCurrentStep, selectProgressPercent,\
+  \ selectAnswersForCurrentStep, selectIsFirst/IsLastStep.\n- Wire slice into the\
+  \ root store at frontend/src/store/index.ts (combine reducers and export typed hooks\
+  \ if using).\n\nBusiness Logic (hooks):\n- Add frontend/src/hooks/useSurveyStepper.ts:\n\
+  \  - Accepts the fetched Survey.\n  - On mount/effect, dispatch initializeFromSurvey\
+  \ once per surveyId.\n  - Exposes: steps, currentStep, currentStepIndex, progressPercent,\
+  \ answersForCurrentStep, setAnswer, goNext, goPrev, jumpToStep, isFirst, isLast,\
+  \ canProceed (based on validation), submit() which calls existing submit endpoint\
+  \ when isLast and valid.\n  - Contains deterministic grouping algorithm:\n    1)\
+  \ If questions have sectionId/groupId/page, group by the first present key in that\
+  \ priority order; order steps by min(question.order) within group.\n    2) If none\
+  \ present, single step containing all questions ordered by question.order.\n   \
+  \ 3) Step title derives from section/group label if present; else \"Step N\".\n\
+  - Add frontend/src/hooks/useSurveyProgress.ts (optional thin wrapper) to compute\
+  \ and expose progress metrics from store.\n\nComponents:\n- Add frontend/src/components/StepProgressBar.tsx:\n\
+  \  - Props: steps: Step[], currentIndex: number, onStepClick?: (index) => void,\
+  \ showLabels?: boolean.\n  - Renders a horizontal progress indicator with clickable\
+  \ steps (invokes jumpToStep for visited steps only).\n- Add frontend/src/components/StepNavigation.tsx:\n\
+  \  - Props: isFirst: boolean, isLast: boolean, onPrev: () => void, onNext: () =>\
+  \ void, nextLabel?: string (\"Next\" or \"Submit\"), disabled?: boolean.\n  - Renders\
+  \ Prev/Next buttons with appropriate disabled states.\n- Update frontend/src/components/SurveyForm.tsx\
+  \ (or the primary survey rendering component):\n  - Accepts the current step’s questionIds\
+  \ and answers.\n  - Renders only questions for the current step in order.\n  - Calls\
+  \ setAnswer on value changes.\n  - Displays validation errors from store for fields\
+  \ in the current step.\n\nPages and Routes:\n- Update frontend/src/pages/SurveyPage.tsx:\n\
+  \  - Fetch survey via existing API hook/client.\n  - Initialize useSurveyStepper\
+  \ with fetched survey.\n  - Render layout: StepProgressBar, SurveyForm for current\
+  \ step, StepNavigation.\n  - On Next: if not last, goNext(); if last and valid,\
+  \ submit() to existing endpoint, then navigate to existing completion/thank-you\
+  \ route.\n  - On Prev: goPrev().\n- No changes required to frontend/src/routes unless\
+  \ a dedicated completion page route is missing; if already present, keep as-is.\
+  \ If not present, re-use existing completion handling flow.\n\nLayout/UX:\n- Ensure\
+  \ the progress bar remains visible (stick to top if page scrolls) and reflects current\
+  \ index and completion state of visited steps.\n- Preserve answers across steps\
+  \ in store; do not refetch or reset on navigation.\n- Keyboard/focus management:\
+  \ move focus to step heading on navigation for accessibility.\n- Prevent Next when\
+  \ required questions in the current step are invalid if existing validation utilities\
+  \ are present; otherwise allow Next and surface errors on submit only, matching\
+  \ current app behavior.\n"
+migration: No Schema Changes

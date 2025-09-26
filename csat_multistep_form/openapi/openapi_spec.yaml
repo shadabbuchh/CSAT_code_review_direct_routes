@@ -1,0 +1,399 @@
+openapi: 3.1.0
+info:
+  title: App Template API
+  version: 1.0.0
+  description: Template API specification - will be populated by workflow
+servers:
+  - url: /api/v1
+    description: API version 1
+paths:
+  /survey-sessions:
+    post:
+      summary: Create a new survey session
+      operationId: createSurveySession
+      description: |
+        Start a new survey session. The server will initialize the session with the provided surveyId and split the survey into sequential steps (logical groups). Returns the created session with initial step and progress information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSurveySessionRequest'
+      responses:
+        '201':
+          description: Survey session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveySession'
+              examples:
+                created:
+                  summary: Created session example
+                  value:
+                    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+                    surveyId: 'survey-123'
+                    currentStepIndex: 0
+                    steps:
+                      - id: 'step-1'
+                        title: 'Demographics'
+                        questionIds: ['q1', 'q2']
+                      - id: 'step-2'
+                        title: 'Feedback'
+                        questionIds: ['q3']
+                    progress:
+                      completedSteps: 0
+                      totalSteps: 2
+                      percentage: 0
+                    createdAt: '2025-01-01T12:00:00Z'
+                    updatedAt: '2025-01-01T12:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /survey-sessions/{sessionId}:
+    get:
+      summary: Retrieve survey session state
+      operationId: getSurveySession
+      description: Retrieve the full session state, including answers preserved across steps and progress indicator.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveySession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete a survey session
+      operationId: deleteSurveySession
+      description: Delete an existing survey session and all answers.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /survey-sessions/{sessionId}/steps/{stepIndex}:
+    get:
+      summary: Get a specific step in the session
+      operationId: getSessionStep
+      description: |
+        Retrieve the contents of a specific step (logical group) within the session, including questions and any saved answers for that step.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: stepIndex
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Step retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStepResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Save or update answers for a step
+      operationId: saveStepAnswers
+      description: |
+        Persist answers for the specified step. Answers are preserved when navigating between steps. Returns updated session state and progress.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: stepIndex
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveStepAnswersRequest'
+      responses:
+        '200':
+          description: Answers saved and session updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveySession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /survey-sessions/{sessionId}/navigate:
+    post:
+      summary: Navigate between steps
+      operationId: navigateSession
+      description: |
+        Move the current step pointer forward or backward. The server will validate that answers for current step are preserved. Returns updated session state including currentStepIndex and progress.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NavigateRequest'
+      responses:
+        '200':
+          description: Navigation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveySession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /survey-sessions/{sessionId}/progress:
+    get:
+      summary: Get progress for a session
+      operationId: getSessionProgress
+      description: Return progress indicator information for the session (completed steps, total steps, percentage).
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Progress information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+    SurveySession:
+      type: object
+      required:
+        - id
+        - surveyId
+        - currentStepIndex
+        - steps
+        - progress
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        surveyId:
+          type: string
+        currentStepIndex:
+          type: integer
+          minimum: 0
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+        answers:
+          type: array
+          description: Collection of answers saved in the session across steps
+          items:
+            $ref: '#/components/schemas/Answer'
+        progress:
+          $ref: '#/components/schemas/Progress'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Step:
+      type: object
+      required:
+        - id
+        - title
+        - questionIds
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        questionIds:
+          type: array
+          items:
+            type: string
+    Answer:
+      type: object
+      required:
+        - questionId
+        - value
+        - updatedAt
+      properties:
+        questionId:
+          type: string
+        value:
+          type: object
+          description: Stored answer payload. Can be primitive, object or array depending on question type.
+        stepId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Progress:
+      type: object
+      required:
+        - completedSteps
+        - totalSteps
+        - percentage
+      properties:
+        completedSteps:
+          type: integer
+          minimum: 0
+        totalSteps:
+          type: integer
+          minimum: 0
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+    CreateSurveySessionRequest:
+      type: object
+      required:
+        - surveyId
+      properties:
+        surveyId:
+          type: string
+        initialAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Answer'
+    SessionStepResponse:
+      type: object
+      required:
+        - step
+        - answers
+      properties:
+        step:
+          $ref: '#/components/schemas/Step'
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Answer'
+        currentStepIndex:
+          type: integer
+          minimum: 0
+        progress:
+          $ref: '#/components/schemas/Progress'
+    SaveStepAnswersRequest:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Answer'
+        preserveOtherSteps:
+          type: boolean
+          description: Whether answers for other steps should be preserved (true by default behavior)
+    NavigateRequest:
+      type: object
+      required:
+        - direction
+      properties:
+        direction:
+          type: string
+          description: "Direction of navigation: 'next' or 'previous'"
+          enum:
+            - next
+            - previous
+        validateCurrentStep:
+          type: boolean
+          description: Whether to validate required answers on the current step before navigating.
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict (concurrent update or duplicate)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

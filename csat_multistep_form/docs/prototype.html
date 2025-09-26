@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Customer Satisfaction Multi-Step Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --color-accent-primary: 217 91% 60%; /* Blue 500 */
+            --color-accent-secondary: 215 28% 17%; /* Gray 800 */
+            --color-accent-success: 142 71% 45%; /* Green 600 */
+            --color-surface: 0 0% 100%;
+            --color-surface-background: 220 13% 91%;
+            --color-text-primary: 220 13% 28%;
+            --color-text-secondary: 220 9% 46%;
+            --color-border: 220 13% 85%;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --spacing-4: 1rem;
+            --spacing-6: 1.5rem;
+            --transition-duration: 150ms;
+        }
+        body {
+            background-color: hsl(var(--color-surface-background));
+            color: hsl(var(--color-text-primary));
+        }
+        .theme-bg-surface { background-color: hsl(var(--color-surface)); }
+        .theme-bg-accent-primary { background-color: hsl(var(--color-accent-primary)); }
+        .theme-bg-accent-success { background-color: hsl(var(--color-accent-success)); }
+        .theme-text-accent-primary { color: hsl(var(--color-accent-primary)); }
+        .theme-text-on-accent { color: hsl(var(--color-surface)); }
+        .theme-text-primary { color: hsl(var(--color-text-primary)); }
+        .theme-text-secondary { color: hsl(var(--color-text-secondary)); }
+        .theme-border { border-color: hsl(var(--color-border)); }
+        .theme-ring-accent-primary { ring-color: hsl(var(--color-accent-primary)); }
+        .theme-shadow-md { box-shadow: var(--shadow-md); }
+        .theme-rounded-md { border-radius: var(--radius-md); }
+        .theme-rounded-lg { border-radius: var(--radius-lg); }
+        .theme-transition { transition-duration: var(--transition-duration); }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <main class="container mx-auto max-w-2xl space-y-8">
+        <!-- Multi-Step Form Component -->
+        <div class="theme-bg-surface theme-rounded-lg theme-shadow-md p-6 sm:p-8 space-y-8">
+            <header class="text-center">
+                <h1 class="text-2xl sm:text-3xl font-bold theme-text-primary">Customer Satisfaction Survey</h1>
+                <p class="mt-2 theme-text-secondary">Your feedback helps us improve.</p>
+            </header>
+
+            <!-- Progress Indicator -->
+            <div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-base font-medium theme-text-primary">Step 2 of 4</span>
+                    <span class="text-sm font-medium theme-text-secondary">50% Complete</span>
+                </div>
+                <div class="w-full bg-gray-200 theme-rounded-lg h-2.5">
+                    <div class="theme-bg-accent-primary h-2.5 theme-rounded-lg" style="width: 50%"></div>
+                </div>
+            </div>
+
+            <!-- Form Step Content -->
+            <div class="space-y-6">
+                <!-- Question 1: Rating Scale -->
+                <fieldset>
+                    <legend class="font-semibold theme-text-primary mb-2">1. Overall, how satisfied are you with our service?</legend>
+                    <div class="flex items-center justify-center space-x-2 sm:space-x-4 pt-2">
+                        <button type="button" aria-label="Rate 1 out of 5" class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary">
+                            <i data-lucide="star" class="w-6 h-6 sm:w-8 sm:h-8 text-gray-300"></i>
+                        </button>
+                        <button type="button" aria-label="Rate 2 out of 5" class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary">
+                             <i data-lucide="star" class="w-6 h-6 sm:w-8 sm:h-8 text-gray-300"></i>
+                        </button>
+                        <button type="button" aria-label="Rate 3 out of 5" class="p-2 rounded-full theme-bg-accent-primary bg-opacity-10 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary">
+                             <i data-lucide="star" class="w-6 h-6 sm:w-8 sm:h-8 theme-text-accent-primary fill-current"></i>
+                        </button>
+                        <button type="button" aria-label="Rate 4 out of 5" class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary">
+                            <i data-lucide="star" class="w-6 h-6 sm:w-8 sm:h-8 text-gray-300"></i>
+                        </button>
+                        <button type="button" aria-label="Rate 5 out of 5" class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary">
+                             <i data-lucide="star" class="w-6 h-6 sm:w-8 sm:h-8 text-gray-300"></i>
+                        </button>
+                    </div>
+                </fieldset>
+
+                <!-- Question 2: Dropdown -->
+                <div>
+                    <label for="product-usage" class="block font-semibold theme-text-primary mb-2">2. How often do you use our product?</label>
+                    <select id="product-usage" name="product-usage" class="w-full p-3 border theme-border theme-rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition">
+                        <option>Daily</option>
+                        <option selected>Weekly</option>
+                        <option>Monthly</option>
+                        <option>Rarely</option>
+                    </select>
+                </div>
+                
+                <!-- Question 3: Text Input with Inline Error -->
+                <div>
+                    <label for="feature-request" class="block font-semibold theme-text-primary mb-2">3. What is one feature you would like to see added?</label>
+                    <input type="text" id="feature-request" name="feature-request" class="w-full p-3 border theme-border theme-rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition" value="Integration with third-party calendars">
+                    <p class="text-red-500 text-sm mt-1">This field is required.</p>
+                </div>
+
+                <!-- Question 4: Textarea -->
+                <div>
+                    <label for="feedback" class="block font-semibold theme-text-primary mb-2">4. Do you have any other comments or suggestions?</label>
+                    <textarea id="feedback" name="feedback" rows="4" class="w-full p-3 border theme-border theme-rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition" placeholder="Your feedback is valuable..."></textarea>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between pt-4">
+                <button type="button" class="px-6 py-3 font-semibold theme-text-secondary bg-gray-200 theme-rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition">
+                    Previous
+                </button>
+                <button type="button" class="px-6 py-3 font-semibold theme-text-on-accent theme-bg-accent-primary theme-rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition">
+                    Next
+                </button>
+            </div>
+        </div>
+
+        <!-- Confirmation Screen Component (Static Example) -->
+        <div class="theme-bg-surface theme-rounded-lg theme-shadow-md p-6 sm:p-8 space-y-6 text-center">
+            <div class="flex justify-center">
+                <div class="w-16 h-16 theme-bg-accent-success rounded-full flex items-center justify-center">
+                    <i data-lucide="check" class="w-10 h-10 text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold theme-text-primary">Thank You!</h2>
+            <p class="theme-text-secondary max-w-md mx-auto">
+                Your submission has been received. We appreciate you taking the time to share your thoughts with us.
+            </p>
+            <div class="pt-4">
+                <button type="button" class="px-6 py-3 font-semibold theme-text-on-accent theme-bg-accent-secondary theme-rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 theme-ring-accent-primary theme-transition">
+                    Return to Homepage
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
